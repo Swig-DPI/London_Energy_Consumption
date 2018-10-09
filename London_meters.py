@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 from sklearn.datasets import load_boston
 from sklearn.metrics import mean_squared_error
 from fancyimpute import SimpleFill, KNN,  IterativeSVD, IterativeImputer
+import plotly.plotly as py
+import plotly.graph_objs as go
 
 
 ## Data Scrubber
@@ -30,7 +32,7 @@ def join_df_weather(dfmeter_hh, dfweather_h):
         return pd.merge(dfmeter_hh,dfweather_h, how = 'inner', left_on='date_start_time', right_on='date_start_time')
 
 
-def break_by_meter(df):
+def break_by_meter(df, unique_meters):
     '''df = weather and meter data combined
         Splits data by meter'''
     meter_df_list = []
@@ -51,14 +53,62 @@ def plot_scatter_matrix(df):
     ## Plot heat map of blocks
 
 ## Mean energy by meter in each block
-def mean_meter(meter_df_list):  ### Need to fixxx
+def mean_meter_all(meter_df_list):  ### Need to fixxx
     mean = []
     name = []
     for meter in meter_df_list:
         mean.append(meter['energy'].mean())
-        name.append(meter['LCLid'])
-        print(1)
-    return dict(zip(name,mean))
+        name.append(meter['LCLid'].unique()[0]) ## this gets the unique name of the meter itself
+    return mean, name
+
+def run_block(df):  ## this should be used to run all needed fucntions for each block
+    pass
+
+
+### Only use if you want to compute all blocks.
+    ## Takes ~ 10 mins to run for 111 blocks
+def means_of_all_blocks(number_of_blocks):
+    '''This function will find the means of the n blocks in the data base'''
+    dfweather_h = pd.read_csv("data/smart_meters_london/weather_hourly_darksky.csv")
+    df_pass = pd.DataFrame({'A' : []})
+    for i in range(number_of_blocks):
+        print('block_{}'.format(i))
+        string = "data/smart_meters_london/halfhourly_dataset/block_{}.csv".format(i)
+        dfmeter_hh = pd.read_csv(string)
+        df_meter_weather_hourly = join_df_weather(dfmeter_hh, dfweather_h) ## joins the two data frames on hour of time. Removes all non matching half hour data
+        df_meter_weather_hourly['energy'] = pd.to_numeric(df_meter_weather_hourly['energy(kWh/hh)'])  ## converts exisitng energy colum to correct numeric values
+        unique_meters = df_meter_weather_hourly['LCLid'].unique() ## Breaks into individual meter names
+        meter_df_list = break_by_meter(df_meter_weather_hourly, unique_meters)  # See def
+        mean_meter_enengy, mean_meter_enengy_name = mean_meter_all(meter_df_list) # see Def
+
+        # This is to keep the mean lengths consistant
+            ## should create a better way to implenment and add NAN instead of adding 0
+                    # this will shift the mean down
+        if len(mean_meter_enengy) == 50 :
+            df_pass['block_{}'.format(i)] = mean_meter_enengy
+        elif len(mean_meter_enengy) < 50:
+            len_param = len(mean_meter_enengy)
+            mean_meter_enengy = mean_meter_enengy + [0]*(50 -len_param)
+            df_pass['block_{}'.format(i)] = mean_meter_enengy
+        else:
+            df_pass['block_{}'.format(i)] = mean_meter_enengy[0:50]
+
+    df_pass.to_csv('data/smart_meters_london/meterAVGS.csv', encoding='utf-8', index=False)
+    return df_pass.drop(labels = 'A', axis = 1)
+
+def linear_reg(single_meter_df):
+    y = single_meter_df['energy']
+    X = single_meter_df.drop(labels = 'energy', axis = 0)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25)
+
+
+    # Fit your model using the training set
+    linear = LinearRegression()
+    linear.fit(X_train, y_train)
+
+    # Call predict to get the predicted values for training and test set
+    train_predicted = linear.predict(X_train)
+    test_predicted = linear.predict(X_test)
 
 
 
@@ -96,11 +146,10 @@ if __name__ == '__main__':
     df_meter_weather_hourly = join_df_weather(dfmeter_hh, dfweather_h) ## joins the two data frames on hour of time. Removes all non matching half hour data
     df_meter_weather_hourly['energy'] = pd.to_numeric(df_meter_weather_hourly['energy(kWh/hh)'])  ## converts exisitng energy colum to correct numeric values
     unique_meters = df_meter_weather_hourly['LCLid'].unique() ## gets unique meters in block
-    meter_df_list = break_by_meter(df_meter_weather_hourly)
+    meter_df_list = break_by_meter(df_meter_weather_hourly, unique_meters)
 
     plot_scatter_matrix(meter_df_list[0]) ## Initial scatter plot of a single meter at a single block
-    mean_meter_enengy = mean_meter(meter_df_list)
-
-
-    dfmeter = data_scrubber(dfmeter, percent_good = 0.9)
-    dfweather = data_scrubber(dfweather, percent_good = 0.9)
+    linear_reg(df_meter_weather_hourly)
+    mean_meter_enengy, mean_meter_enengy_name = mean_meter_all(meter_df_list)
+    #heat_map_plot(mean_meter_enengy, mean_meter_enengy_name)
+    #plt.show()
