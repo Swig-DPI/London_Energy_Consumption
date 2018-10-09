@@ -2,11 +2,11 @@ import numpy as np
 import pandas as pd
 import missingno as msno
 import matplotlib.pyplot as plt
-from sklearn.datasets import load_boston
-from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_squared_error #, cross_val_score
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LassoCV, LinearRegression, RidgeCV
 from fancyimpute import SimpleFill, KNN,  IterativeSVD, IterativeImputer
-import plotly.plotly as py
-import plotly.graph_objs as go
+
 
 
 ## Data Scrubber
@@ -65,6 +65,9 @@ def run_block(df):  ## this should be used to run all needed fucntions for each 
     pass
 
 
+
+
+
 ### Only use if you want to compute all blocks.
     ## Takes ~ 10 mins to run for 111 blocks
 def means_of_all_blocks(number_of_blocks):
@@ -97,18 +100,40 @@ def means_of_all_blocks(number_of_blocks):
     return df_pass.drop(labels = 'A', axis = 1)
 
 def linear_reg(single_meter_df):
+    ## Split and clean Data
+    single_meter_df.dropna(inplace = True)
     y = single_meter_df['energy']
-    X = single_meter_df.drop(labels = 'energy', axis = 0)
+    X = single_meter_df.drop(columns = ['energy', 'energy(kWh/hh)','time', 'tstp', 'date_start_time'], inplace = True)  ## removed time and tstp because i have a time_date object thats contains that data
+    X = pd.get_dummies(df_meter_weather_hourly,columns = ['precipType', 'icon','summary', 'LCLid'])
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25)
 
 
     # Fit your model using the training set
     linear = LinearRegression()
+    lasso_cv = LassoCV(cv=5, random_state=0)
+    ridge_cv = RidgeCV(alphas=(0.1, 1.0, 10.0))
     linear.fit(X_train, y_train)
+    lasso_cv.fit(X_train, y_train)
+    ridge_cv.fit(X_train, y_train)
 
-    # Call predict to get the predicted values for training and test set
-    train_predicted = linear.predict(X_train)
-    test_predicted = linear.predict(X_test)
+    return ridge_cv, lasso_cv, linear, X_train, X_test, y_train, y_test
+
+
+def ridgeCV_plot(X_train, X_test, y_train, y_test):
+    plot_y = []
+    plot_y_test = []
+    plot_x = np.arange(0.1,10,0.1)
+    for val in np.arange(0.1,10,0.1):
+        ridge_cv = RidgeCV(alphas=(val,val+2.5))
+        ridge_cv.fit(X_train, y_train)
+        plot_y.append(ridge_cv.score(X_train, y_train))
+        plot_y_test.append(ridge_cv.score(X_test, y_test))
+
+    plt.scatter(plot_x, plot_y, c = 'r')
+    plt.scatter(plot_x, plot_y_test, c = 'b')
+    plt.show()
+    return plot_x, plot_y, plot_y_test
+
 
 
 
@@ -133,7 +158,6 @@ def linear_reg(single_meter_df):
         ## ROC plot
 
     #return linear errors
-    # return Logisic errors
 
 if __name__ == '__main__':
     dfmeter = pd.read_csv("data/smart_meters_london/daily_dataset/block_0.csv")
@@ -148,8 +172,9 @@ if __name__ == '__main__':
     unique_meters = df_meter_weather_hourly['LCLid'].unique() ## gets unique meters in block
     meter_df_list = break_by_meter(df_meter_weather_hourly, unique_meters)
 
-    plot_scatter_matrix(meter_df_list[0]) ## Initial scatter plot of a single meter at a single block
-    linear_reg(df_meter_weather_hourly)
+    ## plot_scatter_matrix(meter_df_list[0]) ## Initial scatter plot of a single meter at a single block
+    ridge_cv, lasso_cv, linear, X_train, X_test, y_train, y_test = linear_reg(df_meter_weather_hourly)
+    plot_x_alphas, plot_y, plot_y_test = ridgeCV_plot(X_train, X_test, y_train, y_test)
     mean_meter_enengy, mean_meter_enengy_name = mean_meter_all(meter_df_list)
     #heat_map_plot(mean_meter_enengy, mean_meter_enengy_name)
     #plt.show()
