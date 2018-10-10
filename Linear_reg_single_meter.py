@@ -74,75 +74,19 @@ def mean_meter_all(meter_df_list):  ### Need to fixxx
     return mean, name
 
 
-### Only use if you want to compute all blocks.
-    ## Takes ~ 10 mins to run for 111 blocks
-def means_of_all_blocks(number_of_blocks):
-    '''This function will find the means of the n blocks in the data base'''
-    dfweather_h = pd.read_csv("data/smart_meters_london/weather_hourly_darksky.csv")
-    df_pass = pd.DataFrame({'A' : []})
-    for i in range(number_of_blocks):
-        print('block_{}'.format(i))
-        string = "data/smart_meters_london/halfhourly_dataset/block_{}.csv".format(i)
-        dfmeter_hh = pd.read_csv(string)
-        df_meter_weather_hourly = join_df_weather(dfmeter_hh, dfweather_h) ## joins the two data frames on hour of time. Removes all non matching half hour data
-        unique_meters = df_meter_weather_hourly['LCLid'].unique() ## Breaks into individual meter names
-        meter_df_list = break_by_meter(df_meter_weather_hourly, unique_meters)  # See def
-        mean_meter_enengy, mean_meter_enengy_name = mean_meter_all(meter_df_list) # see Def
 
-        # This is to keep the mean lengths consistant
-            ## should create a better way to implenment and add NAN instead of adding 0
-                    # this will shift the mean down
-        if len(mean_meter_enengy) == 50 :
-            df_pass['block_{}'.format(i)] = mean_meter_enengy
-        elif len(mean_meter_enengy) < 50:
-            len_param = len(mean_meter_enengy)
-            mean_meter_enengy = mean_meter_enengy + [0]*(50 -len_param)
-            df_pass['block_{}'.format(i)] = mean_meter_enengy
-        else:
-            df_pass['block_{}'.format(i)] = mean_meter_enengy[0:50]
-
-    df_pass.to_csv('data/smart_meters_london/meterAVGS.csv', encoding='utf-8', index=False)
-    return df_pass.drop(labels = 'A', axis = 1)
-
-def means_of_all_blocks_plot():
-    df = pd.read_csv('data/smart_meters_london/meterAVGS.csv')
-    df.drop(columns = ['A'],inplace=True)
-    ax = sns.heatmap(df.values)
-    plt.xlabel('Blocks')
-    plt.ylabel('Blocks')
-    plt.title('Average Energy for all Blocks (24/7)')
-    plt.show()
-
-def energy_by_hour_plot(meter_df_list):
-    pass
-
-
-
-def split_data_multimeter(df_in):
-    ## Split and clean Data
-    df_in.dropna(inplace = True)
-    df = df_in.copy(deep = True)
-    y = df['energy']
-    X = df.drop(columns = ['energy','energy(kWh/hh)','time', 'tstp', 'date_start_time'], inplace = True)  ## removed time and tstp because i have a time_date object thats contains that data
-    X = pd.get_dummies(df,columns = ['precipType', 'icon','summary', 'LCLid'])
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25)
-    return X_train, X_test, y_train, y_test
-
-def split_data_single_meter(single_meter_df):
+def split_data_single_meter(single_meter_df, drop_list):
     ## Split and clean Data
     single_meter_df.dropna(inplace = True)
-    df = single_meter_df.copy(deep = True)
-    y = df['energy']
-    X = df.drop(columns = ['energy','energy(kWh/hh)','time', 'tstp', 'date_start_time', 'LCLid'], inplace = True)  ## removed time and tstp because i have a time_date object thats contains that data
-    X = pd.get_dummies(df,columns = ['precipType', 'icon','summary'])
+    df1 = single_meter_df.copy(deep = True)
+    y = df1['energy']
+    X = df1.drop(columns = drop_list)
+
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25)
-    return X_train, X_test, y_train, y_test
+    return X_train, X_test, y_train, y_test, df1
 
 
-def linear_reg_all(df):
-    ## Split and clean Data
-    X_train, X_test, y_train, y_test = split_data_multimeter(df)
-
+def linear_reg_single_meter(X_train, X_test, y_train, y_test):
     # Fit your model using the training set
     linear = LinearRegression()
     lasso_cv = LassoCV(cv=5, random_state=0)
@@ -152,47 +96,28 @@ def linear_reg_all(df):
     ridge_cv.fit(X_train, y_train)
     print('Linear regression score on train set with all parameters: {}'.format(linear.score(X_train, y_train)))
     print('Linear regression score on test set with all parameters: {}'.format(linear.score(X_test, y_test)))
-    print('Linear regression crossVal score on train set with all parameters: {}'.format(linear.score(X_train, y_train)))
-    print('Linear regression crossVal score on test set with all parameters: {}'.format(linear.score(X_test, y_test)))
+    # print('Linear regression crossVal score on train set with all parameters: {}'.format(linear.score(X_train, y_train)))
+    # print('Linear regression crossVal score on test set with all parameters: {}'.format(linear.score(X_test, y_test)))
 
     print('LassoCV regression score on train set with all parameters: {}'.format(lasso_cv.score(X_train, y_train)))
     print('LassoCV regression score on test set with all parameters: {}'.format(lasso_cv.score(X_test, y_test)))
-    print('LassoCV regression crossVal score on train set with all parameters: {}'.format(lasso_cv.score(X_train, y_train)))
-    print('LassoCV regression crossVal score on test set with all parameters: {}'.format(lasso_cv.score(X_test, y_test)))
+    # print('LassoCV regression crossVal score on train set with all parameters: {}'.format(lasso_cv.score(X_train, y_train)))
+    # print('LassoCV regression crossVal score on test set with all parameters: {}'.format(lasso_cv.score(X_test, y_test)))
 
     print('RidgeCV regression score on train set with all parameters: {}'.format(ridge_cv.score(X_train, y_train)))
     print('RidgeCV regression score on test set with all parameters: {}'.format(ridge_cv.score(X_test, y_test)))
-    print('RidgeCV regression crossVal score on train set with all parameters: {}'.format(ridge_cv.score(X_train, y_train)))
-    print('RidgeCV regression crossVal score on test set with all parameters: {}'.format(ridge_cv.score(X_test, y_test)))
+    # print('RidgeCV regression crossVal score on train set with all parameters: {}'.format(ridge_cv.score(X_train, y_train)))
+    # print('RidgeCV regression crossVal score on test set with all parameters: {}'.format(ridge_cv.score(X_test, y_test)))
 
-    return ridge_cv, lasso_cv, linear, X_train, X_test, y_train, y_test
+    return ridge_cv, lasso_cv, linear
 
-def linear_reg_single_meter(single_meter_df):
+def run_models(meter_df_list, meter,list_to_drop):
+    X_train_meter, X_test_meter, y_train_meter, y_test_meter, df = split_data_single_meter(meter_df_list[meter_num],drop_list = list_to_drop)
+    ridge_cv_meter, lasso_cv_meter, linear_meter  = linear_reg_single_meter(X_train_meter, X_test_meter, y_train_meter, y_test_meter)
+    #OLS_model(X_train_meter,y_train_meter)
+    print(OLS_model_noplot(X_train_meter,y_train_meter))
+    return ridge_cv_meter, lasso_cv_meter, linear_meter, X_train_meter, X_test_meter, y_train_meter, y_test_meter
 
-    X_train, X_test, y_train, y_test = split_data_single_meter(single_meter_df)
-    # Fit your model using the training set
-    linear = LinearRegression()
-    lasso_cv = LassoCV(cv=5, random_state=0)
-    ridge_cv = RidgeCV(alphas=(0.1, 1.0, 10.0))
-    linear.fit(X_train, y_train)
-    lasso_cv.fit(X_train, y_train)
-    ridge_cv.fit(X_train, y_train)
-    print('Linear regression score on train set with all parameters: {}'.format(linear.score(X_train, y_train)))
-    print('Linear regression score on test set with all parameters: {}'.format(linear.score(X_test, y_test)))
-    print('Linear regression crossVal score on train set with all parameters: {}'.format(linear.score(X_train, y_train)))
-    print('Linear regression crossVal score on test set with all parameters: {}'.format(linear.score(X_test, y_test)))
-
-    print('LassoCV regression score on train set with all parameters: {}'.format(lasso_cv.score(X_train, y_train)))
-    print('LassoCV regression score on test set with all parameters: {}'.format(lasso_cv.score(X_test, y_test)))
-    print('LassoCV regression crossVal score on train set with all parameters: {}'.format(lasso_cv.score(X_train, y_train)))
-    print('LassoCV regression crossVal score on test set with all parameters: {}'.format(lasso_cv.score(X_test, y_test)))
-
-    print('RidgeCV regression score on train set with all parameters: {}'.format(ridge_cv.score(X_train, y_train)))
-    print('RidgeCV regression score on test set with all parameters: {}'.format(ridge_cv.score(X_test, y_test)))
-    print('RidgeCV regression crossVal score on train set with all parameters: {}'.format(ridge_cv.score(X_train, y_train)))
-    print('RidgeCV regression crossVal score on test set with all parameters: {}'.format(ridge_cv.score(X_test, y_test)))
-
-    return ridge_cv, lasso_cv, linear, X_train, X_test, y_train, y_test
 
 ## This needs to be fixed.  Log issue??
 def Ridge_plot(X_train, X_test, y_train, y_test):
@@ -214,7 +139,7 @@ def Ridge_plot(X_train, X_test, y_train, y_test):
 def OLS_model(X_train,y_train):
     ols_model = sm.OLS(endog=y_train, exog=X_train).fit()
     print(ols_model.summary())
-    energy_cons = ols_model.outlier_test()['energy']
+    energy_cons = ols_model.outlier_test()['student_resid']
     plt.figure(1)
     plt.scatter(ols_model.fittedvalues, energy_cons)
     plt.xlabel('Fitted values of AVGEXP')
@@ -222,6 +147,10 @@ def OLS_model(X_train,y_train):
     plt.figure(2)
     sm.graphics.qqplot(energy_cons, line='45', fit=True)
     plt.show()
+
+def OLS_model_noplot(X_train,y_train):
+    ols_model = sm.OLS(endog=y_train, exog=X_train).fit()
+    print(ols_model.summary())
 
 
 ## Split all data into train and test.  Only  test on test
@@ -246,6 +175,19 @@ def OLS_model(X_train,y_train):
 
     #return linear errors
 
+def plt_v_time(y_test, y_train, y_train_pred, y_test_pred):
+    train_hr = np.arange(0,len(X_train))
+    test_hr = np.arange(0,len(X_test))
+    plt.figure(1)
+    plt.scatter(train_hr,y_train, c ='r')
+    plt.scatter(train_hr,y_train_pred, c= 'b')
+    plt.figure(2)
+    plt.scatter(test_hr ,y_test, c = 'r')
+    plt.scatter(test_hr ,y_test_pred, c = 'b')
+    plt.show()
+
+
+
 if __name__ == '__main__':
     dfmeter = pd.read_csv("data/smart_meters_london/daily_dataset/block_0.csv")
     dfweather = pd.read_csv("data/smart_meters_london/weather_daily_darksky.csv")
@@ -260,9 +202,70 @@ if __name__ == '__main__':
     unique_meters = df_meter_weather_hourly['LCLid'].unique() ## gets unique meters in block
     meter_df_list = break_by_meter(df_meter_weather_hourly, unique_meters)
 
-    ## plot_scatter_matrix(meter_df_list[0]) ## Initial scatter plot of a single meter at a single block
-    ridge_cv, lasso_cv, linear, X_train, X_test, y_train, y_test = linear_reg_all(df_meter_weather_hourly)
-    ridge_cv_meter, lasso_cv_meter, linear_meter, X_train_meter, X_test_meter, y_train_meter, y_test_meter = linear_reg_single_meter(meter_df_list[0])
+    meter_num = 0
+
+    meter_df_list[meter_num] = pd.get_dummies(meter_df_list[meter_num],columns = ['precipType', 'icon','summary'])
+
+
+
+
+## This is all for data with no Time parameter
+    list_to_drop = ['energy','energy(kWh/hh)','time', 'tstp', 'date_start_time', 'LCLid','dewPoint', 'apparentTemperature']
+    X_train_meter, X_test_meter, y_train_meter, y_test_meter, df = split_data_single_meter(meter_df_list[meter_num],drop_list = list_to_drop)
+    ridge_cv_meter, lasso_cv_meter, linear_meter  = linear_reg_single_meter(X_train_meter, X_test_meter, y_train_meter, y_test_meter)
+    #OLS_model(X_train_meter,y_train_meter)
+    OLS_model_noplot(X_train_meter,y_train_meter)
+
+
+    list_to_drop1 = list(X_test_meter.columns[lasso_cv_meter.coef_ == 0])
+    list_to_drop = list_to_drop1 + list_to_drop
+    X_train_meter1, X_test_meter1, y_train_meter1, y_test_meter1, df = split_data_single_meter(meter_df_list[meter_num], drop_list = list_to_drop )
+    ridge_cv_meter1, lasso_cv_meter1, linear_meter1  = linear_reg_single_meter(X_train_meter1, X_test_meter1, y_train_meter1, y_test_meter1)
+    #OLS_model(X_train_meter1,y_train_meter1)
+    OLS_model_noplot(X_train_meter1,y_train_meter1)
+
+    list_to_drop2 = list(X_test_meter1.columns[lasso_cv_meter1.coef_ == 0])
+    list_to_drop = list_to_drop + list_to_drop2
+    X_train_meter2, X_test_meter2, y_train_meter2, y_test_meter2, df = split_data_single_meter(meter_df_list[meter_num], drop_list = list_to_drop )
+    ridge_cv_meter2, lasso_cv_meter2, linear_meter2  = linear_reg_single_meter(X_train_meter2, X_test_meter2, y_train_meter2, y_test_meter2)
+    #OLS_model(X_train_meter2,y_train_meter2)
+    OLS_model_noplot(X_train_meter2,y_train_meter2)
+
+## Now add in the time parameter
+
+    meter_df_list[meter_num]['hour_column'] = [d.hour for d in meter_df_list[meter_num]['date_start_time']]
+    meter_df_list[meter_num]['day_week'] = [d.dayofweek for d in meter_df_list[meter_num]['date_start_time']]
+    meter_df_list[meter_num] = pd.get_dummies(meter_df_list[meter_num] , columns = ['day_week','hour_column'])
+    list_to_drop = ['energy','energy(kWh/hh)','time', 'tstp', 'LCLid','dewPoint', 'apparentTemperature', 'date_start_time']
+    print(meter_df_list[meter_num].columns)
+    X_train_meter3, X_test_meter3, y_train_meter3, y_test_meter3, df = split_data_single_meter(meter_df_list[meter_num], drop_list = list_to_drop)
+    ridge_cv_meter3, lasso_cv_meter3, linear_meter3  = linear_reg_single_meter(X_train_meter3, X_test_meter3, y_train_meter3, y_test_meter3)
+    #OLS_model(X_train_meter,y_train_meter)
+    OLS_model_noplot(X_train_meter3,y_train_meter3)
+
+    list_to_drop1 = list(X_test_meter.columns[lasso_cv_meter.coef_ == 0])
+    list_to_drop = list_to_drop1 + list_to_drop
+    X_train_meter4, X_test_meter4, y_train_meter4, y_test_meter4, df = split_data_single_meter(meter_df_list[meter_num], drop_list = list_to_drop )
+    ridge_cv_meter4, lasso_cv_meter4, linear_meter4  = linear_reg_single_meter(X_train_meter4, X_test_meter4, y_train_meter4, y_test_meter4)
+    #OLS_model(X_train_meter1,y_train_meter1)
+    OLS_model_noplot(X_train_meter4,y_train_meter4)
+
+    list_to_drop2 = list(X_test_meter1.columns[lasso_cv_meter1.coef_ == 0])
+    list_to_drop = list_to_drop + list_to_drop2
+    X_train_meter5, X_test_meter5, y_train_meter5, y_test_meter5, df = split_data_single_meter(meter_df_list[meter_num], drop_list = list_to_drop )
+    ridge_cv_meter5, lasso_cv_meter5, linear_meter5  = linear_reg_single_meter(X_train_meter5, X_test_meter5, y_train_meter5, y_test_meter5)
+    #OLS_model(X_train_meter2,y_train_meter2)
+    OLS_model_noplot(X_train_meter5,y_train_meter5)
+
+    print('use this')
+    ridge_cv,lasso_cv,linear,X_train,X_test,y_train,y_test = run_models(meter_df_list, meter_num,list_to_drop)
+    OLS_model_noplot(X_train_meter2,y_train_meter2)
+
+    y_train_pred = lasso_cv.predict(X_train)
+    y_test_pred = lasso_cv.predict(X_test)
+
+    plt_v_time(y_test, y_train, y_train_pred, y_test_pred)
+
     #plot_x_alphas, plot_y, plot_y_test = ridgeCV_plot(X_train, X_test, y_train, y_test)
     mean_meter_enengy, mean_meter_enengy_name = mean_meter_all(meter_df_list)
     #heat_map_plot(mean_meter_enengy, mean_meter_enengy_name)
