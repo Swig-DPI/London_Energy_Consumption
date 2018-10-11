@@ -115,7 +115,7 @@ def run_models(meter_df_list, meter,list_to_drop):
     X_train_meter, X_test_meter, y_train_meter, y_test_meter, df = split_data_single_meter(meter_df_list[meter_num],drop_list = list_to_drop)
     ridge_cv_meter, lasso_cv_meter, linear_meter  = linear_reg_single_meter(X_train_meter, X_test_meter, y_train_meter, y_test_meter)
     #OLS_model(X_train_meter,y_train_meter)
-    print(OLS_model_noplot(X_train_meter,y_train_meter))
+    #print(OLS_model_noplot(X_train_meter,y_train_meter))
     return ridge_cv_meter, lasso_cv_meter, linear_meter, X_train_meter, X_test_meter, y_train_meter, y_test_meter
 
 
@@ -175,6 +175,20 @@ def OLS_model_noplot(X_train,y_train):
 
     #return linear errors
 
+def runNmeters(meter_df_list, n ):
+    scores = []
+    print('Running N meter lasso and ridge score')
+    for meter_num in range(n):
+        print('Meter {} working'.format(meter_num))
+        meter_df_list[meter_num]['hour_column'] = [d.hour for d in meter_df_list[meter_num]['date_start_time']]
+        #meter_df_list[meter_num]['day_week'] = [d.dayofweek for d in meter_df_list[meter_num]['date_start_time']]
+        meter_df_list[meter_num] = pd.get_dummies(meter_df_list[meter_num] , columns = ['hour_column'])
+        list_to_drop = ['energy','energy(kWh/hh)','time', 'tstp', 'LCLid','dewPoint', 'apparentTemperature', 'date_start_time']
+        ridge_cv,lasso_cv,linear,X_train,X_test,y_train,y_test = run_models(meter_df_list, meter_num,list_to_drop)
+        scores.append([ridge_cv.score(X_test,y_test), lasso_cv.score(X_test,y_test),])
+        #OLS_model_noplot(X_train,y_train)
+    return scores
+
 def plt_v_time(y_test, y_train, y_train_pred, y_test_pred):
     train_hr = np.arange(0,len(y_train))
     test_hr = np.arange(0,len(y_test))
@@ -217,61 +231,64 @@ if __name__ == '__main__':
 
 
 ## This is all for data with no Time parameter
+    print('Initial Reg without time')
     list_to_drop = ['energy','energy(kWh/hh)','time', 'tstp', 'date_start_time', 'LCLid','dewPoint', 'apparentTemperature']
     X_train_meter, X_test_meter, y_train_meter, y_test_meter, df = split_data_single_meter(meter_df_list[meter_num],drop_list = list_to_drop)
     ridge_cv_meter, lasso_cv_meter, linear_meter  = linear_reg_single_meter(X_train_meter, X_test_meter, y_train_meter, y_test_meter)
     #OLS_model(X_train_meter,y_train_meter)
-    OLS_model_noplot(X_train_meter,y_train_meter)
+    # OLS_model_noplot(X_train_meter,y_train_meter)
 
-
+    print('Initial Reg without time removing first set of Lasso coefficients = 0')
     list_to_drop1 = list(X_test_meter.columns[lasso_cv_meter.coef_ == 0])
     list_to_drop = list_to_drop1 + list_to_drop
     X_train_meter1, X_test_meter1, y_train_meter1, y_test_meter1, df = split_data_single_meter(meter_df_list[meter_num], drop_list = list_to_drop )
     ridge_cv_meter1, lasso_cv_meter1, linear_meter1  = linear_reg_single_meter(X_train_meter1, X_test_meter1, y_train_meter1, y_test_meter1)
     #OLS_model(X_train_meter1,y_train_meter1)
-    OLS_model_noplot(X_train_meter1,y_train_meter1)
-
+    # OLS_model_noplot(X_train_meter1,y_train_meter1)
+    print('Initial Reg without time removing second set of Lasso coefficients = 0')
     list_to_drop2 = list(X_test_meter1.columns[lasso_cv_meter1.coef_ == 0])
     list_to_drop = list_to_drop + list_to_drop2
     X_train_meter2, X_test_meter2, y_train_meter2, y_test_meter2, df = split_data_single_meter(meter_df_list[meter_num], drop_list = list_to_drop )
     ridge_cv_meter2, lasso_cv_meter2, linear_meter2  = linear_reg_single_meter(X_train_meter2, X_test_meter2, y_train_meter2, y_test_meter2)
     #OLS_model(X_train_meter2,y_train_meter2)
-    OLS_model_noplot(X_train_meter2,y_train_meter2)
+    # OLS_model_noplot(X_train_meter2,y_train_meter2)
 
 ## Now add in the time parameter
-
+    print('Initial Reg with time')
     meter_df_list[meter_num]['hour_column'] = [d.hour for d in meter_df_list[meter_num]['date_start_time']]
     meter_df_list[meter_num]['day_week'] = [d.dayofweek for d in meter_df_list[meter_num]['date_start_time']]
     meter_df_list[meter_num] = pd.get_dummies(meter_df_list[meter_num] , columns = ['day_week','hour_column'])
     list_to_drop = ['energy','energy(kWh/hh)','time', 'tstp', 'LCLid','dewPoint', 'apparentTemperature', 'date_start_time']
-    print(meter_df_list[meter_num].columns)
+
     X_train_meter3, X_test_meter3, y_train_meter3, y_test_meter3, df = split_data_single_meter(meter_df_list[meter_num], drop_list = list_to_drop)
     ridge_cv_meter3, lasso_cv_meter3, linear_meter3  = linear_reg_single_meter(X_train_meter3, X_test_meter3, y_train_meter3, y_test_meter3)
     #OLS_model(X_train_meter,y_train_meter)
-    OLS_model_noplot(X_train_meter3,y_train_meter3)
-
+    # OLS_model_noplot(X_train_meter3,y_train_meter3)
+    print('Initial Reg with time removing first set of Lasso coefficients = 0')
     list_to_drop1 = list(X_test_meter.columns[lasso_cv_meter.coef_ == 0])
     list_to_drop = list_to_drop1 + list_to_drop
     X_train_meter4, X_test_meter4, y_train_meter4, y_test_meter4, df = split_data_single_meter(meter_df_list[meter_num], drop_list = list_to_drop )
     ridge_cv_meter4, lasso_cv_meter4, linear_meter4  = linear_reg_single_meter(X_train_meter4, X_test_meter4, y_train_meter4, y_test_meter4)
     #OLS_model(X_train_meter1,y_train_meter1)
-    OLS_model_noplot(X_train_meter4,y_train_meter4)
+    # OLS_model_noplot(X_train_meter4,y_train_meter4)
 
     list_to_drop2 = list(X_test_meter1.columns[lasso_cv_meter1.coef_ == 0])
     list_to_drop = list_to_drop + list_to_drop2
     X_train_meter5, X_test_meter5, y_train_meter5, y_test_meter5, df = split_data_single_meter(meter_df_list[meter_num], drop_list = list_to_drop )
     ridge_cv_meter5, lasso_cv_meter5, linear_meter5  = linear_reg_single_meter(X_train_meter5, X_test_meter5, y_train_meter5, y_test_meter5)
     #OLS_model(X_train_meter2,y_train_meter2)
-    OLS_model_noplot(X_train_meter5,y_train_meter5)
+    # OLS_model_noplot(X_train_meter5,y_train_meter5)
 
     print('use this')
     ridge_cv,lasso_cv,linear,X_train,X_test,y_train,y_test = run_models(meter_df_list, meter_num,list_to_drop)
-    OLS_model_noplot(X_train_meter2,y_train_meter2)
+    # OLS_model_noplot(X_train_meter5,y_train_meter5)
 
     y_train_pred = lasso_cv.predict(X_train)
     y_test_pred = lasso_cv.predict(X_test)
 
     plt_v_time(y_test, y_train, y_train_pred, y_test_pred)
+
+    meterScores = runNmeters(meter_df_list, 5)
 
     #plot_x_alphas, plot_y, plot_y_test = ridgeCV_plot(X_train, X_test, y_train, y_test)
     mean_meter_enengy, mean_meter_enengy_name = mean_meter_all(meter_df_list)

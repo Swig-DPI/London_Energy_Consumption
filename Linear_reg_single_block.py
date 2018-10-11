@@ -41,9 +41,7 @@ def split_data_multimeter(df_in,drop_list, dummies, thresh = 1):
     X = df.drop(columns = drop_list, inplace = True)  ## removed time and tstp because i have a time_date object thats contains that data
     X = pd.get_dummies(df,columns = dummies)
     if thresh < 1:
-        print(X.columns)
         X = trimm_correlated(X,thresh)
-        print(X.columns)
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25)
     return X_train, X_test, y_train, y_test
@@ -86,6 +84,7 @@ def trimm_correlated(df_in, threshold):
     df_out = df_in[un_corr_idx]
     return df_out
 
+
 def plt_v_time(y_test, y_train, y_train_pred, y_test_pred):
     train_hr = np.arange(0,len(y_train))
     test_hr = np.arange(0,len(y_test))
@@ -103,6 +102,18 @@ def plt_v_time(y_test, y_train, y_train_pred, y_test_pred):
     plt.ylabel('Energy')
     plt.title('LassoCV Predicted vs actual')
     plt.legend(loc='upper left')
+    plt.show()
+
+def OLS_model(X_train,y_train):
+    ols_model = sm.OLS(endog=y_train, exog=X_train).fit()
+    print(ols_model.summary())
+    energy_cons = ols_model.outlier_test()['energy']
+    plt.figure(1)
+    plt.scatter(ols_model.fittedvalues, energy_cons)
+    plt.xlabel('Fitted values of AVGEXP')
+    plt.ylabel('Studentized Residuals')
+    plt.figure(2)
+    sm.graphics.qqplot(energy_cons, line='45', fit=True)
     plt.show()
 
 
@@ -138,7 +149,6 @@ if __name__ == '__main__':
     list_to_drop = ['energy','energy(kWh/hh)','time', 'tstp', 'date_start_time']
     Create_dummies = ['precipType', 'icon','summary', 'LCLid','day_week','hour_column']
     threshold = 0.7
-
-
     ridge_cv2, lasso_cv2, linear2, X_train2, X_test2, y_train2, y_test2 = linear_reg_all(df_meter_weather_hourly, drop_list = list_to_drop, dummies = Create_dummies, thresh = threshold)
+
     plt_v_time(y_test2[0:100], y_train2[0:100], y_train_pred=lasso_cv2.predict(X_train2)[0:100] , y_test_pred=lasso_cv2.predict(X_test2)[0:100] )
