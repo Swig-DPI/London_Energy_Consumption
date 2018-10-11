@@ -176,14 +176,21 @@ def OLS_model_noplot(X_train,y_train):
     #return linear errors
 
 def plt_v_time(y_test, y_train, y_train_pred, y_test_pred):
-    train_hr = np.arange(0,len(X_train))
-    test_hr = np.arange(0,len(X_test))
+    train_hr = np.arange(0,len(y_train))
+    test_hr = np.arange(0,len(y_test))
     plt.figure(1)
-    plt.scatter(train_hr,y_train, c ='r')
-    plt.scatter(train_hr,y_train_pred, c= 'b')
+    plt.scatter(train_hr,y_train, c ='r', label = 'Train Actual')
+    plt.scatter(train_hr,y_train_pred, c= 'b', label = 'Train Predicted')
+    plt.xlabel('Time')
+    plt.ylabel('Energy')
+    plt.title('LassoCV Predicted vs actual')
+    plt.legend(loc='upper left')
     plt.figure(2)
-    plt.scatter(test_hr ,y_test, c = 'r')
-    plt.scatter(test_hr ,y_test_pred, c = 'b')
+    plt.scatter(test_hr ,y_test, c = 'r',label = 'Test Actual')
+    plt.scatter(test_hr ,y_test_pred, label = 'Test Predicted')
+    plt.xlabel('Time')
+    plt.ylabel('Energy')
+    plt.legend(loc='upper left')
     plt.show()
 
 

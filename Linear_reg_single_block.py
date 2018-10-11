@@ -33,20 +33,25 @@ def join_df_weather(dfmeter_hh, dfweather_h):
     return merg # .drop(columns = extradata, inplace = True)
 
 
-def split_data_multimeter(df_in):
+def split_data_multimeter(df_in,drop_list, dummies, thresh = 1):
     ## Split and clean Data
     df_in.dropna(inplace = True)
     df = df_in.copy(deep = True)
     y = df['energy']
-    X = df.drop(columns = ['energy','energy(kWh/hh)','time', 'tstp', 'date_start_time'], inplace = True)  ## removed time and tstp because i have a time_date object thats contains that data
-    X = pd.get_dummies(df,columns = ['precipType', 'icon','summary', 'LCLid'])
+    X = df.drop(columns = drop_list, inplace = True)  ## removed time and tstp because i have a time_date object thats contains that data
+    X = pd.get_dummies(df,columns = dummies)
+    if thresh < 1:
+        print(X.columns)
+        X = trimm_correlated(X,thresh)
+        print(X.columns)
+
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25)
     return X_train, X_test, y_train, y_test
 
 
-def linear_reg_all(df):
+def linear_reg_all(df, drop_list, dummies, thresh = 1):
     ## Split and clean Data
-    X_train, X_test, y_train, y_test = split_data_multimeter(df)
+    X_train, X_test, y_train, y_test = split_data_multimeter(df,drop_list,dummies, thresh)
 
     # Fit your model using the training set
     linear = LinearRegression()
@@ -57,21 +62,48 @@ def linear_reg_all(df):
     ridge_cv.fit(X_train, y_train)
     print('Linear regression score on train set with all parameters: {}'.format(linear.score(X_train, y_train)))
     print('Linear regression score on test set with all parameters: {}'.format(linear.score(X_test, y_test)))
-    print('Linear regression crossVal score on train set with all parameters: {}'.format(linear.score(X_train, y_train)))
-    print('Linear regression crossVal score on test set with all parameters: {}'.format(linear.score(X_test, y_test)))
+    # print('Linear regression crossVal score on train set with all parameters: {}'.format(linear.score(X_train, y_train)))
+    # print('Linear regression crossVal score on test set with all parameters: {}'.format(linear.score(X_test, y_test)))
 
     print('LassoCV regression score on train set with all parameters: {}'.format(lasso_cv.score(X_train, y_train)))
     print('LassoCV regression score on test set with all parameters: {}'.format(lasso_cv.score(X_test, y_test)))
-    print('LassoCV regression crossVal score on train set with all parameters: {}'.format(lasso_cv.score(X_train, y_train)))
-    print('LassoCV regression crossVal score on test set with all parameters: {}'.format(lasso_cv.score(X_test, y_test)))
+    # print('LassoCV regression crossVal score on train set with all parameters: {}'.format(lasso_cv.score(X_train, y_train)))
+    # print('LassoCV regression crossVal score on test set with all parameters: {}'.format(lasso_cv.score(X_test, y_test)))
 
     print('RidgeCV regression score on train set with all parameters: {}'.format(ridge_cv.score(X_train, y_train)))
     print('RidgeCV regression score on test set with all parameters: {}'.format(ridge_cv.score(X_test, y_test)))
-    print('RidgeCV regression crossVal score on train set with all parameters: {}'.format(ridge_cv.score(X_train, y_train)))
-    print('RidgeCV regression crossVal score on test set with all parameters: {}'.format(ridge_cv.score(X_test, y_test)))
+    # print('RidgeCV regression crossVal score on train set with all parameters: {}'.format(ridge_cv.score(X_train, y_train)))
+    # print('RidgeCV regression crossVal score on test set with all parameters: {}'.format(ridge_cv.score(X_test, y_test)))
 
     return ridge_cv, lasso_cv, linear, X_train, X_test, y_train, y_test
 
+
+
+def trimm_correlated(df_in, threshold):
+    df_corr = df_in.corr(method='pearson', min_periods=1)
+    df_not_correlated = ~(df_corr.mask(np.tril(np.ones([len(df_corr)]*2, dtype=bool))).abs() > threshold).any()
+    un_corr_idx = df_not_correlated.loc[df_not_correlated[df_not_correlated.index] == True].index
+    df_out = df_in[un_corr_idx]
+    return df_out
+
+def plt_v_time(y_test, y_train, y_train_pred, y_test_pred):
+    train_hr = np.arange(0,len(y_train))
+    test_hr = np.arange(0,len(y_test))
+    plt.figure(1)
+    plt.scatter(train_hr,y_train, c ='r', label = 'Train Actual')
+    plt.scatter(train_hr,y_train_pred, c= 'b', label = 'Train Predicted')
+    plt.xlabel('Time')
+    plt.ylabel('Energy')
+    plt.title('LassoCV Predicted vs actual')
+    plt.legend(loc='upper left')
+    plt.figure(2)
+    plt.scatter(test_hr ,y_test, c = 'r',label = 'Test Actual')
+    plt.scatter(test_hr ,y_test_pred, label = 'Test Predicted')
+    plt.xlabel('Time')
+    plt.ylabel('Energy')
+    plt.title('LassoCV Predicted vs actual')
+    plt.legend(loc='upper left')
+    plt.show()
 
 
 if __name__ == '__main__':
@@ -85,4 +117,28 @@ if __name__ == '__main__':
     df_meter_weather_hourly = join_df_weather(dfmeter_hh, dfweather_h) ## joins the two data frames on hour of time. Removes all non matching half hour data
     df_meter_weather_hourly['energy'] = pd.to_numeric(df_meter_weather_hourly['energy(kWh/hh)'])  ## converts exisitng energy colum to correct numeric values
 
-    ridge_cv, lasso_cv, linear, X_train, X_test, y_train, y_test = linear_reg_all(df_meter_weather_hourly)
+##  No Time Values
+    list_to_drop = ['energy','energy(kWh/hh)','time', 'tstp', 'date_start_time']
+    Create_dummies = ['precipType', 'icon','summary', 'LCLid']
+    ridge_cv, lasso_cv, linear, X_train, X_test, y_train, y_test = linear_reg_all(df_meter_weather_hourly, drop_list = list_to_drop, dummies = Create_dummies)
+
+    print('Working on time Linear reg')
+
+## With Time Values
+    df_meter_weather_hourly['hour_column'] = [d.hour for d in df_meter_weather_hourly['date_start_time']]
+    df_meter_weather_hourly['day_week'] = [d.dayofweek for d in df_meter_weather_hourly['date_start_time']]
+    list_to_drop = ['energy','energy(kWh/hh)','time', 'tstp', 'date_start_time']
+    Create_dummies = ['precipType', 'icon','summary', 'LCLid','day_week','hour_column']
+    ridge_cv1, lasso_cv1, linear1, X_train1, X_test1, y_train1, y_test1 = linear_reg_all(df_meter_weather_hourly, drop_list = list_to_drop, dummies = Create_dummies)
+
+
+    print('Working on time Linear reg with corr removal')
+
+## With Time Values and removal of 0.7 corrolation
+    list_to_drop = ['energy','energy(kWh/hh)','time', 'tstp', 'date_start_time']
+    Create_dummies = ['precipType', 'icon','summary', 'LCLid','day_week','hour_column']
+    threshold = 0.7
+
+
+    ridge_cv2, lasso_cv2, linear2, X_train2, X_test2, y_train2, y_test2 = linear_reg_all(df_meter_weather_hourly, drop_list = list_to_drop, dummies = Create_dummies, thresh = threshold)
+    plt_v_time(y_test2[0:100], y_train2[0:100], y_train_pred=lasso_cv2.predict(X_train2)[0:100] , y_test_pred=lasso_cv2.predict(X_test2)[0:100] )
