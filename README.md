@@ -81,14 +81,15 @@
 
 # Results
   * Blocks
+
   ![](images/LassoCV-predicted_vs_actual.png)
 
 
   * Meters
+
   ![](images/LassoCV_meter_Train_set_all_times.png)
   ![](images/LassoCV_meter_Test_set_all_times.png)
   ![](images/OLS_model_results.png)
-  ![](images/MeterOLS_plot.png)
 
 
 
@@ -97,7 +98,7 @@
 
   * Add in meter purpose parameter. I believe associating the meter with the business or type of home would increase the models accuracy.
 
-  * Focus on certain points in the day instead of all hours.  The middle of the night has lower energy use in general. 
+  * Focus on certain points in the day instead of all hours.  The middle of the night has lower energy use in general.
 
   * Create a block and meter class that stores the values needed to be calculated.  Currently each model is in its own script.
 
