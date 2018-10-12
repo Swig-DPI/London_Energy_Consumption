@@ -5,7 +5,7 @@
 
 ## Cleaning and joining the data
   *  The two set of data were joined on the time stamp associated with them.  Half hour data was dropped due to convenience.  
-  * The metering data came in a strings where there were there should have been floats.  This data needed to be coverted to numeric values.
+  * The metering data came in a strings where there were there should have been floats.  This data needed to be converted to numeric values.
   * Data had to be one hot encoded for some of the weather features.
 
   ![](images/Scatter_matrix_of_MAC000002.png)
