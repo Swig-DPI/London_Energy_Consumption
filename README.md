@@ -10,6 +10,16 @@
 
   ![](images/Scatter_matrix_of_MAC000002.png)
 
+  * Weather Metrics:  'visibility', 'windBearing', 'temperature', 'pressure', 'windSpeed',
+       'humidity', 'precipType_rain', 'precipType_snow', 'icon_clear-day',
+       'icon_clear-night', 'icon_cloudy', 'icon_fog', 'icon_partly-cloudy-day',
+       'icon_partly-cloudy-night', 'icon_wind', 'summary_Breezy',
+       'summary_Breezy and Mostly Cloudy', 'summary_Breezy and Overcast',
+       'summary_Breezy and Partly Cloudy', 'summary_Clear', 'summary_Foggy',
+       'summary_Mostly Cloudy', 'summary_Overcast', 'summary_Partly Cloudy',
+       'summary_Windy', 'summary_Windy and Mostly Cloudy',
+       'summary_Windy and Overcast'
+
   ## Initial Data analysis
     * Energy values vary widely between meters and time.
      * the variation in meter energy could depend on house or business that is using the meter.  In the future I would break add in a parameter for meter application to verify what the meters purpose is.
@@ -19,6 +29,8 @@
   ![](images/Energy_6_meters_by_hr.png)
   ![](images/Energy_single_meter_by_hr.png)
   ![](images/AVG_energy_for_all_blocks.png)
+
+  *
 
 ## Initial Model Time not used
   * I did not use time because I knew that energy peaks in the morning and evening for most residential homes.  I wanted to see if we could do a prediction without time.
@@ -84,6 +96,8 @@
   * Reduce features and look more into what is collinear.  
 
   * Add in meter purpose parameter. I believe associating the meter with the business or type of home would increase the models accuracy.
+
+  * Focus on certain points in the day instead of all hours.  The middle of the night has lower energy use in general. 
 
   * Create a block and meter class that stores the values needed to be calculated.  Currently each model is in its own script.
 
