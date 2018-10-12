@@ -75,10 +75,14 @@
   * Meters
   ![](images/LassoCV_meter_Train_set_all_times.png)
   ![](images/LassoCV_meter_Test_set_all_times.png)
+  ![](images/OLS_model_results.png)
+  ![](images/MeterOLS_plot.png)
 
 
 
 # Future improvements
+  * Reduce features and look more into what is collinear.  
+
   * Add in meter purpose parameter. I believe associating the meter with the business or type of home would increase the models accuracy.
 
   * Create a block and meter class that stores the values needed to be calculated.  Currently each model is in its own script.
