@@ -57,15 +57,15 @@ def break_by_meter(df, unique_meters):
     ## Discuss corollations
 def plot_scatter_matrix(df):
     plot1 = pd.plotting.scatter_matrix(df)
-    plt.savefig('images/Scatter_matrix_of_{}.png'.format(df['LCLid'][0]))
+    plt.savefig('images/Scatter_matrix_of_{}.png'.format(df['LCLid'][0]))#Jane says: this is elegant; it automatically names the file appropriately, rather than asking for user input
 
 
-## Mean energy by by block
+## Mean energy by block
     ## build function
     ## Plot heat map of blocks
 
 ## Mean energy by meter in each block
-def mean_meter_all(meter_df_list):  ### Need to fixxx
+def mean_meter_all(meter_df_list):
     mean = []
     name = []
     for meter in meter_df_list:
@@ -117,6 +117,31 @@ def run_models(meter_df_list, meter,list_to_drop):
     #OLS_model(X_train_meter,y_train_meter)
     #print(OLS_model_noplot(X_train_meter,y_train_meter))
     return ridge_cv_meter, lasso_cv_meter, linear_meter, X_train_meter, X_test_meter, y_train_meter, y_test_meter
+
+
+def Ridge_plot_updated(X_train, X_test, y_train, y_test):
+    nalphas = 50
+    min_alpha_exp = 0
+    max_alpha_exp = 6
+    coefs = np.zeros((nalphas, nfeatures))
+    alphas = np.logspace(min_alpha_exp, max_alpha_exp, nalphas)
+    columns = list(X_test.columns)
+    for i, alpha in enumerate(alphas):
+        model = Ridge(alpha=alpha)
+        model.fit(X_train, y_train)
+        coefs[i] = model.coef_
+
+    fig, ax = plt.subplots(figsize=(10,5))
+    for feature in range(nfeatures):
+        plt.plot(alphas, coefs[:, feature],
+
+                 label="$\\beta_{{{}}}$".format(columns[feature]))
+
+    ax.set_xscale('log')
+    ax.set_title("$\\beta$ as a function of $\\alpha$ for Ridge regression")
+    ax.set_xlabel("$\\alpha$")
+    ax.set_ylabel("$\\beta$")
+    ax.legend(loc="upper right")
 
 
 ## This needs to be fixed.  Log issue??
@@ -210,6 +235,17 @@ def plt_v_time(y_test, y_train, y_train_pred, y_test_pred):
 
 
 if __name__ == '__main__':
+
+    plt.rcParams.update({
+   'font.size'           : 20.0,
+   'axes.titlesize'      : 'large',
+   'axes.labelsize'      : 'medium',
+   'xtick.labelsize'     : 'medium',
+   'ytick.labelsize'     : 'medium',
+   'legend.fontsize'     : 'large',
+   })
+
+
     dfmeter = pd.read_csv("data/smart_meters_london/daily_dataset/block_0.csv")
     dfweather = pd.read_csv("data/smart_meters_london/weather_daily_darksky.csv")
 
@@ -237,6 +273,7 @@ if __name__ == '__main__':
     ridge_cv_meter, lasso_cv_meter, linear_meter  = linear_reg_single_meter(X_train_meter, X_test_meter, y_train_meter, y_test_meter)
     #OLS_model(X_train_meter,y_train_meter)
     # OLS_model_noplot(X_train_meter,y_train_meter)
+    print('\n')
 
     print('Initial Reg without time removing first set of Lasso coefficients = 0')
     list_to_drop1 = list(X_test_meter.columns[lasso_cv_meter.coef_ == 0])
@@ -245,6 +282,8 @@ if __name__ == '__main__':
     ridge_cv_meter1, lasso_cv_meter1, linear_meter1  = linear_reg_single_meter(X_train_meter1, X_test_meter1, y_train_meter1, y_test_meter1)
     #OLS_model(X_train_meter1,y_train_meter1)
     # OLS_model_noplot(X_train_meter1,y_train_meter1)
+    print('\n')
+
     print('Initial Reg without time removing second set of Lasso coefficients = 0')
     list_to_drop2 = list(X_test_meter1.columns[lasso_cv_meter1.coef_ == 0])
     list_to_drop = list_to_drop + list_to_drop2
@@ -252,7 +291,7 @@ if __name__ == '__main__':
     ridge_cv_meter2, lasso_cv_meter2, linear_meter2  = linear_reg_single_meter(X_train_meter2, X_test_meter2, y_train_meter2, y_test_meter2)
     #OLS_model(X_train_meter2,y_train_meter2)
     # OLS_model_noplot(X_train_meter2,y_train_meter2)
-
+    print('\n')
 ## Now add in the time parameter
     print('Initial Reg with time')
     meter_df_list[meter_num]['hour_column'] = [d.hour for d in meter_df_list[meter_num]['date_start_time']]
@@ -264,6 +303,8 @@ if __name__ == '__main__':
     ridge_cv_meter3, lasso_cv_meter3, linear_meter3  = linear_reg_single_meter(X_train_meter3, X_test_meter3, y_train_meter3, y_test_meter3)
     #OLS_model(X_train_meter,y_train_meter)
     # OLS_model_noplot(X_train_meter3,y_train_meter3)
+    print('\n')
+
     print('Initial Reg with time removing first set of Lasso coefficients = 0')
     list_to_drop1 = list(X_test_meter.columns[lasso_cv_meter.coef_ == 0])
     list_to_drop = list_to_drop1 + list_to_drop
@@ -271,6 +312,7 @@ if __name__ == '__main__':
     ridge_cv_meter4, lasso_cv_meter4, linear_meter4  = linear_reg_single_meter(X_train_meter4, X_test_meter4, y_train_meter4, y_test_meter4)
     #OLS_model(X_train_meter1,y_train_meter1)
     # OLS_model_noplot(X_train_meter4,y_train_meter4)
+    print('\n')
 
     list_to_drop2 = list(X_test_meter1.columns[lasso_cv_meter1.coef_ == 0])
     list_to_drop = list_to_drop + list_to_drop2
@@ -278,6 +320,7 @@ if __name__ == '__main__':
     ridge_cv_meter5, lasso_cv_meter5, linear_meter5  = linear_reg_single_meter(X_train_meter5, X_test_meter5, y_train_meter5, y_test_meter5)
     #OLS_model(X_train_meter2,y_train_meter2)
     # OLS_model_noplot(X_train_meter5,y_train_meter5)
+    print('\n')
 
     print('use this')
     ridge_cv,lasso_cv,linear,X_train,X_test,y_train,y_test = run_models(meter_df_list, meter_num,list_to_drop)
@@ -286,9 +329,9 @@ if __name__ == '__main__':
     y_train_pred = lasso_cv.predict(X_train)
     y_test_pred = lasso_cv.predict(X_test)
 
-    plt_v_time(y_test, y_train, y_train_pred, y_test_pred)
+    #plt_v_time(y_test, y_train, y_train_pred, y_test_pred)
 
-    meterScores = runNmeters(meter_df_list, 5)
+    #meterScores = runNmeters(meter_df_list, 5)
 
     #plot_x_alphas, plot_y, plot_y_test = ridgeCV_plot(X_train, X_test, y_train, y_test)
     mean_meter_enengy, mean_meter_enengy_name = mean_meter_all(meter_df_list)
