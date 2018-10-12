@@ -137,14 +137,6 @@ def OLS_model(X_train,y_train):
 
 if __name__ == '__main__':
 
-    plt.rcParams.update({
-   'font.size'           : 20.0,
-   'axes.titlesize'      : 'large',
-   'axes.labelsize'      : 'medium',
-   'xtick.labelsize'     : 'medium',
-   'ytick.labelsize'     : 'medium',
-   'legend.fontsize'     : 'large',
-   })
 
     dfmeter = pd.read_csv("data/smart_meters_london/daily_dataset/block_0.csv")
     dfweather = pd.read_csv("data/smart_meters_london/weather_daily_darksky.csv")
@@ -188,8 +180,8 @@ if __name__ == '__main__':
     print('Working on time Linear reg with corr removal and Lasso coef = 0 removed')
     list_to_drop2 = list(X_test2.columns[lasso_cv2.coef_ == 0])
     list_to_drop = list_to_drop + list_to_drop2
-    print('coef dropped = ')
-    print(list_to_drop)
+    # print('coef dropped = ')
+    # print(list_to_drop)
     print('\n')
     ridge_cv3, lasso_cv3, linear3, X_train3, X_test3, y_train3, y_test3 = linear_reg_all(df_meter_weather_hourly, drop_list = list_to_drop, dummies = Create_dummies, thresh = threshold)
     print('\n')
@@ -198,8 +190,8 @@ if __name__ == '__main__':
     print('Working on time Linear reg with corr removal and second round of Lasso coef = 0 removed')
     list_to_drop2 = list(X_test3.columns[lasso_cv3.coef_ == 0])
     list_to_drop = list_to_drop + list_to_drop2
-    print('coef dropped = ')
-    print(list_to_drop)
+    # print('coef dropped = ')
+    # print(list_to_drop)
     print('\n')
     ridge_cv4, lasso_cv4, linear4, X_train4, X_test4, y_train4, y_test4 = linear_reg_all(df_meter_weather_hourly, drop_list = list_to_drop, dummies = Create_dummies, thresh = threshold)
 
@@ -207,4 +199,5 @@ if __name__ == '__main__':
 
 
 
-    #plt_v_time(y_test2[0:100], y_train2[0:100], y_train_pred=lasso_cv2.predict(X_train2)[0:100] , y_test_pred=lasso_cv2.predict(X_test2)[0:100] )
+    plt_v_time(y_test2[0:100], y_train2[0:100], y_train_pred=lasso_cv2.predict(X_train2)[0:100] , y_test_pred=lasso_cv2.predict(X_test2)[0:100] )
+    plt_v_time(y_test4[0:100], y_train4[0:100], y_train_pred=lasso_cv4.predict(X_train4)[0:100] , y_test_pred=lasso_cv4.predict(X_test4)[0:100] )

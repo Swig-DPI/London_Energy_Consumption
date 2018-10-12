@@ -222,13 +222,14 @@ def plt_v_time(y_test, y_train, y_train_pred, y_test_pred):
     plt.scatter(train_hr,y_train_pred, c= 'b', label = 'Train Predicted')
     plt.xlabel('Time')
     plt.ylabel('Energy')
-    plt.title('LassoCV Predicted vs actual')
+    plt.title('LassoCV Predicted vs Actual Training Set')
     plt.legend(loc='upper left')
     plt.figure(2)
     plt.scatter(test_hr ,y_test, c = 'r',label = 'Test Actual')
     plt.scatter(test_hr ,y_test_pred, label = 'Test Predicted')
     plt.xlabel('Time')
     plt.ylabel('Energy')
+    plt.title('LassoCV Predicted vs Actual Test Set')
     plt.legend(loc='upper left')
     plt.show()
 
@@ -322,14 +323,14 @@ if __name__ == '__main__':
     # OLS_model_noplot(X_train_meter5,y_train_meter5)
     print('\n')
 
-    print('use this')
-    ridge_cv,lasso_cv,linear,X_train,X_test,y_train,y_test = run_models(meter_df_list, meter_num,list_to_drop)
-    # OLS_model_noplot(X_train_meter5,y_train_meter5)
+    # print('use this')
+    # ridge_cv,lasso_cv,linear,X_train,X_test,y_train,y_test = run_models(meter_df_list, meter_num,list_to_drop)
+    OLS_model_noplot(X_train_meter5,y_train_meter5)
 
-    y_train_pred = lasso_cv.predict(X_train)
-    y_test_pred = lasso_cv.predict(X_test)
+    y_train_pred = lasso_cv_meter5.predict(X_train_meter5)
+    y_test_pred = lasso_cv_meter5.predict(X_test_meter5)
 
-    #plt_v_time(y_test, y_train, y_train_pred, y_test_pred)
+    plt_v_time(y_test_meter5, y_train_meter5, y_train_pred, y_test_pred)
 
     #meterScores = runNmeters(meter_df_list, 5)
 
