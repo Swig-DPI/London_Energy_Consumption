@@ -94,6 +94,12 @@ def linear_reg_single_meter(X_train, X_test, y_train, y_test):
     linear.fit(X_train, y_train)
     lasso_cv.fit(X_train, y_train)
     ridge_cv.fit(X_train, y_train)
+    print("Variance Inflation Factors")
+    print(vifs(X_test))
+    print('\n')
+    print('Features')
+    print('\n')
+    print(list(X_test.columns))
     print('Linear regression score on train set with all parameters: {}'.format(linear.score(X_train, y_train)))
     print('Linear regression score on test set with all parameters: {}'.format(linear.score(X_test, y_test)))
     # print('Linear regression crossVal score on train set with all parameters: {}'.format(linear.score(X_train, y_train)))
@@ -199,6 +205,13 @@ def OLS_model_noplot(X_train,y_train):
         ## ROC plot
 
     #return linear errors
+
+def vifs(x):
+    vifs = []
+    for index in range(x.shape[1]):
+        vifs.append(round(variance_inflation_factor(x.values, index),2))
+    return vifs
+
 
 def runNmeters(meter_df_list, n ):
     scores = []
@@ -319,7 +332,7 @@ if __name__ == '__main__':
     list_to_drop = list_to_drop + list_to_drop2
     X_train_meter5, X_test_meter5, y_train_meter5, y_test_meter5, df = split_data_single_meter(meter_df_list[meter_num], drop_list = list_to_drop )
     ridge_cv_meter5, lasso_cv_meter5, linear_meter5  = linear_reg_single_meter(X_train_meter5, X_test_meter5, y_train_meter5, y_test_meter5)
-    #OLS_model(X_train_meter2,y_train_meter2)
+    #OLS_model(X_train_meter5,y_train_meter5)
     # OLS_model_noplot(X_train_meter5,y_train_meter5)
     print('\n')
 

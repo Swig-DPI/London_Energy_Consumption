@@ -1,5 +1,9 @@
-# London Metering Data
-  * The data was composed of two(2) sets of CSV's.  One containing energy values on every half hour and one containing weather values on every hour.  
+# London Energy Metering
+  * The goal of this project was to look into the energy data provided to see if linear regression could provide a good model to predict the future energy usage.  
+
+## Data  
+  * The data was composed of sets of CSV's.  There was daily and hourly data for the energy and weather data. I chose to pick the hourly data sets.  
+  *  The data was taken from Kraggle and is located here: https://www.kaggle.com/jeanmidev/smart-meters-in-london .
 
 
 
@@ -10,19 +14,12 @@
 
   ![](images/Scatter_matrix_of_MAC000002.png)
 
-  * Weather Metrics:  'visibility', 'windBearing', 'temperature', 'pressure', 'windSpeed',
-       'humidity', 'precipType_rain', 'precipType_snow', 'icon_clear-day',
-       'icon_clear-night', 'icon_cloudy', 'icon_fog', 'icon_partly-cloudy-day',
-       'icon_partly-cloudy-night', 'icon_wind', 'summary_Breezy',
-       'summary_Breezy and Mostly Cloudy', 'summary_Breezy and Overcast',
-       'summary_Breezy and Partly Cloudy', 'summary_Clear', 'summary_Foggy',
-       'summary_Mostly Cloudy', 'summary_Overcast', 'summary_Partly Cloudy',
-       'summary_Windy', 'summary_Windy and Mostly Cloudy',
-       'summary_Windy and Overcast'
+  * Weather Metrics:  'visibility', 'windBearing', 'temperature', 'pressure', 'windSpeed', 'humidity', 'precipType_rain', 'precipType_snow', 'icon_clear-day',
+       'icon_clear-night', 'icon_cloudy', 'icon_fog', 'icon_partly-cloudy-day', 'icon_partly-cloudy-night', 'icon_wind', 'summary_Breezy', 'summary_Breezy and Mostly Cloudy', 'summary_Breezy and Overcast', 'summary_Breezy and Partly Cloudy', 'summary_Clear', 'summary_Foggy', 'summary_Mostly Cloudy', 'summary_Overcast', 'summary_Partly Cloudy', 'summary_Windy', 'summary_Windy and Mostly Cloudy', 'summary_Windy and Overcast'
 
   ## Initial Data analysis
     * Energy values vary widely between meters and time.
-     * the variation in meter energy could depend on house or business that is using the meter.  In the future I would break add in a parameter for meter application to verify what the meters purpose is.
+      * the variation in meter energy could depend on house or business that is using the meter.  In the future I would break add in a parameter for meter application to verify what the meters purpose is.
 
 
   ![](images/Energy_all_meters_by_hr.png)
@@ -30,11 +27,12 @@
   ![](images/Energy_single_meter_by_hr.png)
   ![](images/AVG_energy_for_all_blocks.png)
 
-  *
+
 
 ## Initial Model Time not used
+  * the first liner regression model I built I looked used only the weather data as the features for my linear regression model.   This kep the energy as the y value we where hoping to predict.
   * I did not use time because I knew that energy peaks in the morning and evening for most residential homes.  I wanted to see if we could do a prediction without time.
-  * Initially I used a LinearRegression, RidgeCV, and LassoCV on one blocks data.  This included the one hot encoded values of the meters. The scores where not great.
+  * Initially I used a LinearRegression, RidgeCV, and LassoCV on one block of data.  This included the one hot encoded values of the meters, weather summaries, and Icon values. The scores where not great for the train or the test set.
 
 ##### Block Scores (R^2) for all meters
 ![](images/Initial_reg_scores.png)
@@ -69,23 +67,25 @@
     * I ran the the model over 40 of the 50 meters in the block and found that my scores were all similar.
     * Nope the average and median where:  0.24
 
-##### Block with LassoCV Reduction with time
+##### Single Block with LassoCV Reduction with time
   * Did the Block fair any better with the added time parameter?
-    * Yes it did
+    * Yes it did.  By about 0.1 in the R^2 score.
 
     * I then removed columns with high collinearity thinking this could be the issue with my model.  
-      * Once again this was not.
+      * Once again this was not and the R^2 scores remained close to the same.
 
   ![](images/LAssoCV_corr_removed.png)
 
 
 # Results
-  * Blocks
+  * Blocks:
+    * Looking at the graph below we can see that we are close to predicting the normal non peak energy consumption.  We fail at modeling the peak values.
 
   ![](images/LassoCV-predicted_vs_actual.png)
 
 
   * Meters
+   * The meters have the same issue as the blocks.  Predicting peak hours is not being done.  
 
   ![](images/LassoCV_meter_Train_set_all_times.png)
   ![](images/LassoCV_meter_Test_set_all_times.png)
@@ -94,6 +94,7 @@
 
 
 # Future improvements
+  * Look into squaring or taking the log of certain features to see if this could be the issue for under fitting the data.
   * Reduce features and look more into what is collinear.  
 
   * Add in meter purpose parameter. I believe associating the meter with the business or type of home would increase the models accuracy.

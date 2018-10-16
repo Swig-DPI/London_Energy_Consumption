@@ -76,6 +76,11 @@ def linear_reg_all(df, drop_list, dummies, thresh = 1):
     linear.fit(X_train, y_train)
     lasso_cv.fit(X_train, y_train)
     ridge_cv.fit(X_train, y_train)
+    print("Variance Inflation Factors")
+    vif = vifs(X_test)
+    print(vif)
+    print('\n')
+    print(list(zip(vif, list(X_test.columns))))
     print('Linear regression score on train set with all parameters: {}'.format(linear.score(X_train, y_train)))
     print('Linear regression score on test set with all parameters: {}'.format(linear.score(X_test_1, y_test)))
     # print('Linear regression crossVal score on train set with all parameters: {}'.format(linear.score(X_train, y_train)))
@@ -133,6 +138,12 @@ def OLS_model(X_train,y_train):
     plt.figure(2)
     sm.graphics.qqplot(energy_cons, line='45', fit=True)
     plt.show()
+
+def vifs(x):
+    vifs = []
+    for index in range(x.shape[1]):
+        vifs.append(round(variance_inflation_factor(x.values, index),2))
+    return vifs
 
 
 if __name__ == '__main__':
