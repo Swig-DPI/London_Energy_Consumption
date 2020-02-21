@@ -12,7 +12,7 @@
   * The metering data came in a strings where there were there should have been floats.  This data needed to be converted to numeric values.
   * Data had to be one hot encoded for some of the weather features.
 
-  ![](images/Scatter_matrix_of_MAC000002.png)
+  ![](images/Scatter_matrix_of_MAC000002_v2.png)
 
   * Weather Metrics:  'visibility', 'windBearing', 'temperature', 'pressure', 'windSpeed', 'humidity', 'precipType_rain', 'precipType_snow', 'icon_clear-day',
        'icon_clear-night', 'icon_cloudy', 'icon_fog', 'icon_partly-cloudy-day', 'icon_partly-cloudy-night', 'icon_wind', 'summary_Breezy', 'summary_Breezy and Mostly Cloudy', 'summary_Breezy and Overcast', 'summary_Breezy and Partly Cloudy', 'summary_Clear', 'summary_Foggy', 'summary_Mostly Cloudy', 'summary_Overcast', 'summary_Partly Cloudy', 'summary_Windy', 'summary_Windy and Mostly Cloudy', 'summary_Windy and Overcast'
@@ -22,9 +22,9 @@
       * the variation in meter energy could depend on house or business that is using the meter.  In the future I would break add in a parameter for meter application to verify what the meters purpose is.
 
 
-  ![](images/Energy_all_meters_by_hr.png)
-  ![](images/Energy_6_meters_by_hr.png)
-  ![](images/Energy_single_meter_by_hr.png)
+  ![](images/Energy_all_meters_by_hr_v2.png)
+  ![](images/Energy_6_meters_by_hr_v2.png)
+  ![](images/Energy_single_meter_by_hr_v2.png)
   ![](images/AVG_energy_for_all_blocks.png)
 
 
