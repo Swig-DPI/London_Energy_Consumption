@@ -4,6 +4,7 @@
 ## Data  
   * The data was composed of sets of CSV's.  There was daily and hourly data for the energy and weather data. I chose to pick the hourly data sets.  
   *  The data was taken from Kraggle and is located here: https://www.kaggle.com/jeanmidev/smart-meters-in-london .
+  * The data consisted of Acorns which are regions.  Each Acorn is made up of multiple blocks.  Each block has multiple smrt meters.
 
 
 
@@ -30,7 +31,7 @@
 
 
 ## Initial Model Time not used
-  * the first liner regression model I built I looked used only the weather data as the features for my linear regression model.   This kep the energy as the y value we where hoping to predict.
+  * The first liner regression model I built used only weather data as the features.   This kept the energy as the y value we where hoping to predict.
   * I did not use time because I knew that energy peaks in the morning and evening for most residential homes.  I wanted to see if we could do a prediction without time.
   * Initially I used a LinearRegression, RidgeCV, and LassoCV on one block of data.  This included the one hot encoded values of the meters, weather summaries, and Icon values. The scores where not great for the train or the test set.
 
